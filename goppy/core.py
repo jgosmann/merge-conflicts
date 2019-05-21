@@ -92,7 +92,8 @@ class OnlineGP(object):
 
         Parameters
         ----------
-        TODO document them
+        y : (`N`, `D`) array-like
+            The `N` training targets with `D` independent dimensions.
         """
 
         x = np.asarray(x)
