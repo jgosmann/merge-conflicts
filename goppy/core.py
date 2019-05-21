@@ -262,7 +262,10 @@ class OnlineGP(object):
         if 'derivative' in what:
             alpha = np.dot(self.inv_chol.T, svs)
             res['derivative'] = np.array([
-                0.5 * np.sum(np.einsum('ij,ji->i', np.dot(alpha, alpha.T) - self.inv_cov_matrix, param_deriv))
+                0.5 * np.sum(np.einsum(
+                    'ij,ji->i',
+                    np.dot(alpha, alpha.T) - self.inv_cov_matrix,
+                    param_deriv))
                 for param_deriv in self.kernel.full(
                     self.x_train, self.x_train, what='param_derivatives')[
                     'param_derivatives']])
