@@ -162,6 +162,45 @@ class OnlineGP(object):
         self.inv_chol[l:, l:] = new_inv_chol
         del self.inv_cov_matrix
 
+    def calc_log_likelihood(self, what=('value',)):
+        r"""Calculate the log likelihood or its derivative of the Gaussian
+        process.
+
+        Depending on the values included in the `what` parameter different
+        values will be calculated:
+
+        * ``'value'``: The log likelihood of the Gaussian process as scalar.
+        * ``'derivative'``: Partial derivatives of the log likelihood for each
+          kernel parameter as array. See the ``params`` property of the used
+          kernel for the order.
+
+        Parameters
+        ----------
+        what : set-like, optional
+            Values to calculate (see above).
+
+        Returns
+        -------
+        dict
+            Dictionary with the elements of `what` as keys and the
+            corresponding calculated values.
+        """
+        res = {}
+        svs = np.dot(self.inv_chol, self.y_train)
+        if 'value' in what:
+            res['value'] = np.squeeze(
+                -0.5 * np.dot(svs.T, svs) +
+                np.sum(np.log(np.diag(self.inv_chol))) -
+                0.5 * len(self.y_train) * np.log(2 * np.pi))
+        if 'derivative' in what:
+            alpha = np.dot(self.inv_chol.T, svs)
+            res['derivative'] = np.array([
+                0.5 * np.sum(np.einsum('ij,ji->i', np.dot(alpha, alpha.T) - self.inv_cov_matrix, param_deriv))
+                for param_deriv in self.kernel.full(
+                    self.x_train, self.x_train, what='param_derivatives')[
+                    'param_derivatives']])
+        return res
+
     def predict(self, x, what=('mean',)):
         r"""Predict with the Gaussian process.
 
@@ -228,45 +267,6 @@ class OnlineGP(object):
         if 'mse_derivative' in what:
             pred['mse_derivative'] = lazy_vars.mse_derivative
         return pred
-
-    def calc_log_likelihood(self, what=('value',)):
-        r"""Calculate the log likelihood or its derivative of the Gaussian
-        process.
-
-        Depending on the values included in the `what` parameter different
-        values will be calculated:
-
-        * ``'value'``: The log likelihood of the Gaussian process as scalar.
-        * ``'derivative'``: Partial derivatives of the log likelihood for each
-          kernel parameter as array. See the ``params`` property of the used
-          kernel for the order.
-
-        Parameters
-        ----------
-        what : set-like, optional
-            Values to calculate (see above).
-
-        Returns
-        -------
-        dict
-            Dictionary with the elements of `what` as keys and the
-            corresponding calculated values.
-        """
-        res = {}
-        svs = np.dot(self.inv_chol, self.y_train)
-        if 'value' in what:
-            res['value'] = np.squeeze(
-                -0.5 * np.dot(svs.T, svs) +
-                np.sum(np.log(np.diag(self.inv_chol))) -
-                0.5 * len(self.y_train) * np.log(2 * np.pi))
-        if 'derivative' in what:
-            alpha = np.dot(self.inv_chol.T, svs)
-            res['derivative'] = np.array([
-                0.5 * np.sum(np.einsum('ij,ji->i', np.dot(alpha, alpha.T) - self.inv_cov_matrix, param_deriv))
-                for param_deriv in self.kernel.full(
-                    self.x_train, self.x_train, what='param_derivatives')[
-                    'param_derivatives']])
-        return res
 
 
 class _LazyVarCollection(object):
