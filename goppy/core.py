@@ -92,10 +92,7 @@ class OnlineGP(object):
 
         Parameters
         ----------
-        x : (`N`, `D`) array-like
-            The `N` input data points of dimension `D` to train on.
-        y : (`N`, `D`) array-like
-            The `N` training targets with `D` independent dimensions.
+        TODO document them
         """
 
         x = np.asarray(x)
