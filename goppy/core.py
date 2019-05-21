@@ -92,7 +92,8 @@ class OnlineGP(object):
 
         Parameters
         ----------
-        TODO document them
+        x : (`N`, `D`) array-like
+            The `N` input data points of dimension `D` to train on.
         """
 
         x = np.asarray(x)
